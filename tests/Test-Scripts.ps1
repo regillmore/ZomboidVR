@@ -38,6 +38,28 @@ Set-Content -LiteralPath "$checkout\live-control\settings.properties" -Value 'st
 Initialize-LiveSettings $checkout
 Assert-True ((Get-Content -LiteralPath "$checkout\live-control\settings.properties" -Raw).Trim() -eq 'strength=0.3') 'Settings were overwritten.'
 
+# Exercise the real control script in the fixture checkout, never the live settings.
+New-Item -ItemType Directory -Force -Path "$checkout\scripts" | Out-Null
+Copy-Item -LiteralPath "$root\scripts\Common.ps1" -Destination "$checkout\scripts\Common.ps1"
+Copy-Item -LiteralPath "$root\Control-Live.ps1" -Destination "$checkout\Control-Live.ps1"
+$newline=[Environment]::NewLine
+$cases=@(
+    @{Name='missing strength'; Before="# Keep custom settings.`nfpsLimit=45`n"; Prefix="# Keep custom settings.`nfpsLimit=45`n"; Suffix=$newline},
+    @{Name='no final newline'; Before='fpsLimit=45'; Prefix="fpsLimit=45$newline"; Suffix=$newline},
+    @{Name='empty settings'; Before=''; Prefix=''; Suffix=$newline},
+    @{Name='existing strength'; Before="# Keep custom settings.`r`nstrength=0.3`r`nfpsLimit=45`r`n"; Prefix="# Keep custom settings.`r`n"; Suffix="`r`nfpsLimit=45`r`n"}
+)
+foreach($case in $cases) {
+    $settings="$checkout\live-control\settings.properties"
+    [IO.File]::WriteAllText($settings,$case.Before,[Text.Encoding]::ASCII)
+    foreach($level in @('0','0.7')) {
+        & "$checkout\Control-Live.ps1" -Strength ([double]::Parse($level,[Globalization.CultureInfo]::InvariantCulture))
+        $actual=[IO.File]::ReadAllText($settings)
+        $expected=$case.Prefix+"strength=$level"+$case.Suffix
+        Assert-True ($actual -ceq $expected) "Strength control failed for $($case.Name) at $level, or changed unrelated settings."
+    }
+}
+
 $original=Join-Path $game 'jre64\bin\jli.dll'
 $copy=Join-Path $game 'jli.dll'
 Set-Content -LiteralPath $original -Value 'owned fixture bytes'
@@ -58,4 +80,4 @@ Assert-True ((Test-Path -LiteralPath $original) -and !(Test-Path -LiteralPath $c
 Copy-Item -LiteralPath $original -Destination $copy
 Ensure-HelperCopy -Root $checkout -GameDir $game
 Assert-True (!(Test-Path -LiteralPath "$checkout\diagnostics\helper-copy.json")) 'A pre-existing file was incorrectly claimed.'
-Write-Output 'PASS: script syntax, second-library discovery, explicit paths, JDK validation, settings preservation, and helper ownership/path/hash checks.'
+Write-Output 'PASS: script syntax, second-library discovery, explicit paths, JDK validation, settings preservation, strength controls, and helper ownership/path/hash checks.'

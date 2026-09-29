@@ -6,6 +6,7 @@
 - Include the zoom-coverage correction: copy physical viewport pixels rather than the logical projection extent.
 - Include the UI flicker correction: capture immediately before the real UI draw, excluding operation-only batches.
 - Keep the mouse pointer in selected flat mode and the no-world fallback; report explicit flat mode as `live_flat` and document persistent depth settings.
+- Make strength controls add a missing setting, including in an empty settings file, while preserving unrelated settings and existing line endings.
 - Discover Steam libraries and JDK installations, accept local path overrides, and preserve user settings.
 - Add source builds, local GPU/bytecode validation, script tests, diagnostic tools, and documentation.
 

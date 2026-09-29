@@ -41,6 +41,7 @@ Offline validation verifies the transformed bytecode and exactly one capture inv
 - Built the live agent/runtime and both diagnostic agents from the cloned repository.
 - Passed `Validate-Live.ps1` against the locally installed game and GPU.
 - Passed script parsing and fixtures under Windows PowerShell 5.1 and PowerShell 7: second Steam library with spaces, configured paths, JDK validation, settings preservation, and helper copy ownership/path/hash checks.
+- Reproduced the review finding that strength controls silently did nothing when the saved property was absent. After the fix, the real control script passes flat/depth toggles in isolated fixtures with a missing property, an empty file, no final newline, and an existing property; unrelated settings and existing line endings are preserved. Both PowerShell versions pass.
 - Original prototype files remain in the parent development folder. The game was closed during initial packaging; the later live check below covers the packaged launch path.
 
 ## Packaged launch and flat-mode cursor — September 29
