@@ -40,7 +40,7 @@ The launch scripts apply PowerShell execution-policy bypass only to their child 
 
 ## Settings
 
-The first launch copies [`config/defaults.properties`](config/defaults.properties) to `live-control/settings.properties`. Existing settings are preserved. The renderer rereads them twice per second.
+The first launch copies [`config/defaults.properties`](config/defaults.properties) to `live-control/settings.properties`. Existing settings are preserved, including flat mode (`strength=0`), across stop/start. Use **Live Depth.cmd** to restore depth. The renderer rereads settings twice per second. The mouse pointer remains visible in both flat and stereo modes when the game shows its cursor.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |

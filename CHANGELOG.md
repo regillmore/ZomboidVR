@@ -5,6 +5,7 @@
 - Import the working live GPU stereo prototype with a fixed-depth UI, SteamVR overlay, adjustable strength/convergence, and start/stop/recenter controls.
 - Include the zoom-coverage correction: copy physical viewport pixels rather than the logical projection extent.
 - Include the UI flicker correction: capture immediately before the real UI draw, excluding operation-only batches.
+- Keep the mouse pointer in selected flat mode and the no-world fallback; report explicit flat mode as `live_flat` and document persistent depth settings.
 - Discover Steam libraries and JDK installations, accept local path overrides, and preserve user settings.
 - Add source builds, local GPU/bytecode validation, script tests, diagnostic tools, and documentation.
 

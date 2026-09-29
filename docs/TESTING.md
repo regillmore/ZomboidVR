@@ -41,7 +41,15 @@ Offline validation verifies the transformed bytecode and exactly one capture inv
 - Built the live agent/runtime and both diagnostic agents from the cloned repository.
 - Passed `Validate-Live.ps1` against the locally installed game and GPU.
 - Passed script parsing and fixtures under Windows PowerShell 5.1 and PowerShell 7: second Steam library with spaces, configured paths, JDK validation, settings preservation, and helper copy ownership/path/hash checks.
-- Original prototype files remain in the parent development folder. The packaged checkout's new discovery/launch path has not yet been retested end-to-end in a headset; Project Zomboid was closed during packaging.
+- Original prototype files remain in the parent development folder. The game was closed during initial packaging; the later live check below covers the packaged launch path.
+
+## Packaged launch and flat-mode cursor — September 29
+
+The packaged checkout attached successfully and captured world depth, but its saved `strength=0` produced a flat view. Restoring 0.7 through the checkout's own controls restored both stereoscopy and the pointer, confirmed in Steam Frame by the user. Saved settings intentionally survive restart; the repository defaults remain 0.7.
+
+This exposed a shared shader bug: selected flat mode and the no-world fallback returned before drawing the pointer. Cursor composition now follows both flat and stereo scene rendering. An isolated GPU test renders visible/hidden cursor cases for both eyes in all three modes, verifies the pointer's screen position, and checks that the background is preserved. Status now reports `live_flat` when depth is explicitly disabled, instead of incorrectly reporting `live_stereo` merely because a depth buffer is available.
+
+The corrected runtime was stopped/reloaded into the running game successfully. Live status confirmed transitions from `live_flat` at 0 to `live_stereo` at 0.7, with roughly 60 updates/second and no reported errors. Depth was left enabled. Flat-mode pointer coverage is GPU-test verified; the headset confirmation above was with depth enabled.
 
 ## Reproducing checks
 

@@ -26,7 +26,7 @@ For premultiplied UI, `final = world * (1 - alpha) + UI`. The output changes onl
 stereo = final + (warpedWorld - world) * (1 - uiAlpha)
 ```
 
-This keeps opaque menu pixels at the same position in both eyes and preserves translucent UI over the stereo world. The world-only capture must be clean and aligned with the final image for this relation to hold. Native cursor visibility is represented by an added fixed-plane pointer in depth mode.
+This keeps opaque menu pixels at the same position in both eyes and preserves translucent UI over the stereo world. The world-only capture must be clean and aligned with the final image for this relation to hold. Native cursor visibility is represented by an added fixed-plane pointer after scene composition, including selected flat mode and the no-world fallback.
 
 ## Loading and cleanup
 

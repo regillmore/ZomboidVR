@@ -18,11 +18,18 @@ Check `live-control/status.properties`:
 | --- | --- |
 | `waiting_for_headset_tracking` | Put on/wake the headset and confirm SteamVR tracking. The screen appears once a valid pose is available. |
 | `live_stereo` | Dismiss the SteamVR dashboard and use **Recenter Live.cmd**. |
+| `live_flat` | Flat mode is selected. Use **Live Depth.cmd** to restore depth. |
 | `flat_fallback_no_world_or_ui` | Load a single-player scene and enable offscreen UI rendering in the game. |
 | `error` | Read the `error` value; stop the overlay before retrying. |
 | `stopped` | Start again when ready. |
 
 The game menu without a loaded world can be flat. Split-screen is not supported. A status file can be left over after a crash or game exit: check its update time and whether the game is still running.
+
+## The overlay appears but has no depth
+
+Check `strength` in `live-control/settings.properties`. A value of `0` selects flat mode, and restarting preserves that selection. Double-click **Live Depth.cmd** in the same folder that launched the overlay to restore 0.7; no restart is needed. Each checkout has its own settings and controls. If depth is enabled but the status says `flat_fallback_no_world_or_ui`, use the guidance above.
+
+Earlier builds also skipped the pointer in flat mode. The current shader draws it in stereo, selected flat mode, and the no-world fallback, following the game's cursor visibility setting.
 
 ## Already installed, switching folders, or changed code
 

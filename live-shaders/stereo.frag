@@ -33,9 +33,9 @@ float shiftAt(float x,float center) {
     float maximum=strength/120.0;
     return eye*clamp((center-d)/depthSpan*2.0,-1.0,1.0)*maximum;
 }
-void main() {
+vec3 sceneColor() {
     vec3 final=texture(finalColor,uv).rgb;
-    if(hasWorld==0 || strength<=0.0) { color=vec4(final,1); return; }
+    if(hasWorld==0 || strength<=0.0) return final;
     float center=referenceDepth();
     float best=uv.x, bestError=100.0, nearest=1.0;
     float maximum=strength/120.0;
@@ -56,7 +56,11 @@ void main() {
     float alpha=clamp(texture(uiLayer,uv*uiScale).a,0.0,1.0);
     // Preserve the game's complete final image, changing only the world contribution.
     // For premultiplied UI, final = world*(1-alpha)+UI. The same UI stays in both eyes.
-    vec3 result=final+(warped-base)*(1.0-alpha);
+    return final+(warped-base)*(1.0-alpha);
+}
+void main() {
+    // Draw the fixed-plane cursor in stereo, selected flat mode, and flat fallback.
+    vec3 result=sceneColor();
     if(cursorVisible>0.5) {
         vec2 p=(uv-cursor)*sourceSize;
         // Fixed-plane pointer for native OS cursors absent from the framebuffer.

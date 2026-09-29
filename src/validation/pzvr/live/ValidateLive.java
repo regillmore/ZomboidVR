@@ -68,6 +68,7 @@ public final class ValidateLive {
                 || glGetInteger(GL_ACTIVE_TEXTURE)!=GL_TEXTURE2 || glGetInteger(GL_TEXTURE_BINDING_2D)!=texture)
                 throw new AssertionError("OpenGL state was not restored.");
             int error=glGetError(); if(error!=GL_NO_ERROR) throw new AssertionError("GL error "+error);
+            validateCursor(program);
             glUseProgram(0); glDeleteProgram(program); glDeleteShader(vs); glDeleteShader(fs); glDeleteTextures(texture);
             System.out.println("OpenGL state restoration passed.");
             validateZoomDepth();
@@ -77,6 +78,62 @@ public final class ValidateLive {
         int shader=glCreateShader(type); glShaderSource(shader,source); glCompileShader(shader);
         if(glGetShaderi(shader,GL_COMPILE_STATUS)==0) throw new AssertionError(glGetShaderInfoLog(shader));
         return shader;
+    }
+
+    private static void validateCursor(int program) {
+        try(GlState saved=new GlState()) {
+            int source=glGenTextures(), depth=glGenTextures(), output=glGenTextures();
+            int fbo=glGenFramebuffers(), vao=glGenVertexArrays();
+            var pixels=MemoryUtil.memAlloc(64*64*4);
+            try {
+                glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D,source);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+                glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,1,1,0,GL_RGBA,GL_FLOAT,new float[]{0.2f,0.4f,0.6f,0});
+                glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D,depth);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+                glTexImage2D(GL_TEXTURE_2D,0,GL_R32F,1,1,0,GL_RED,GL_FLOAT,new float[]{0.5f});
+                glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D,output);
+                glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,64,64,0,GL_RGBA,GL_UNSIGNED_BYTE,0L);
+                glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+                glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,output,0);
+                glDrawBuffer(GL_COLOR_ATTACHMENT0); glReadBuffer(GL_COLOR_ATTACHMENT0);
+                if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE) throw new AssertionError("Cursor test FBO incomplete.");
+                glUseProgram(program); glBindVertexArray(vao); glViewport(0,0,64,64);
+                for(String name:List.of("worldColor","uiLayer","finalColor")) glUniform1i(glGetUniformLocation(program,name),0);
+                glUniform1i(glGetUniformLocation(program,"worldDepth"),1);
+                glUniform2f(glGetUniformLocation(program,"uiScale"),1,1);
+                glUniform2f(glGetUniformLocation(program,"sourceSize"),64,64);
+                glUniform2f(glGetUniformLocation(program,"cursor"),0.5f,0.5f);
+                glUniform1f(glGetUniformLocation(program,"depthSpan"),0.05f);
+                glUniform1f(glGetUniformLocation(program,"convergence"),0);
+                for(int mode=0;mode<3;mode++) for(int visible=0;visible<2;visible++) for(int eye:new int[]{-1,1}) {
+                    glUniform1i(glGetUniformLocation(program,"hasWorld"),mode==1?0:1);
+                    glUniform1f(glGetUniformLocation(program,"strength"),mode==0?0:0.7f);
+                    glUniform1f(glGetUniformLocation(program,"cursorVisible"),visible);
+                    glUniform1f(glGetUniformLocation(program,"eye"),eye);
+                    glDrawArrays(GL_TRIANGLES,0,3);
+                    glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+                    // A visible pointer must be white at the same screen position in each eye.
+                    // With the pointer hidden, preserve the entire flat source exactly.
+                    for(int y=0;y<64;y++) for(int x=0;x<64;x++) {
+                        boolean center=x==32 && y==32;
+                        if(visible!=0 && !center && x>=23 && x<=40 && y>=23 && y<=40) continue;
+                        for(int channel=0;channel<3;channel++) {
+                            int expected=visible!=0 && center?255:51*(channel+1);
+                            int actual=pixels.get((y*64+x)*4+channel)&255;
+                            if(Math.abs(actual-expected)>1) throw new AssertionError("Cursor mode="+mode+", visible="+visible+", eye="+eye+", pixel="+x+","+y+": "+actual+" != "+expected);
+                        }
+                    }
+                }
+                int error=glGetError(); if(error!=GL_NO_ERROR) throw new AssertionError("Cursor test GL error "+error);
+                System.out.println("Cursor pixels passed in both eyes: selected flat, missing-world fallback, stereo, and cursor hidden; background preserved.");
+            } finally {
+                MemoryUtil.memFree(pixels); glDeleteFramebuffers(fbo); glDeleteVertexArrays(vao);
+                glDeleteTextures(source); glDeleteTextures(depth); glDeleteTextures(output);
+            }
+        }
     }
 
     private static void validateZoomDepth() {

@@ -202,7 +202,7 @@ public final class LiveSession implements LiveBridge.Driver {
             if(timing) { glQueryCounter(queries[slot*2+1],GL_TIMESTAMP); queryPending[slot]=true; queryIndex++; }
             glFlush();
             vr.submit(stereoTexture);
-            mode=vr.positioned()?(captured?"live_stereo":"flat_fallback_no_world_or_ui"):"waiting_for_headset_tracking";
+            mode=vr.positioned()?(strength<=0?"live_flat":captured?"live_stereo":"flat_fallback_no_world_or_ui"):"waiting_for_headset_tracking";
             frames++; if(captured) worldFrames++; lastFrameNanos=now;
             cpuSum+=(System.nanoTime()-begin+captureCpu)/1e6;
             reportFrames++;
