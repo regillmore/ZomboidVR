@@ -1,0 +1,15 @@
+/build/
+/live-control/
+/preview-control/
+/captures/
+/diagnostics/
+/local.paths.psd1
+__pycache__/
+*.class
+*.jar
+*.dll
+*.f32
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
