@@ -8,13 +8,13 @@ jobs:
   scripts:
     runs-on: windows-latest
     timeout-minutes: 10
-    strategy:
-      matrix:
-        shell: [powershell, pwsh]
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
-      - name: Parse scripts and exercise launcher fixtures
-        shell: ${{ matrix.shell }}
+      - name: Check scripts with Windows PowerShell 5.1
+        shell: powershell
+        run: ./tests/Test-Scripts.ps1
+      - name: Check scripts with PowerShell 7
+        shell: pwsh
         run: ./tests/Test-Scripts.ps1
